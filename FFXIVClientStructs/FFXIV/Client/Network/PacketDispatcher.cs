@@ -61,7 +61,14 @@ public unsafe partial struct PacketDispatcher {
     [MemberFunction("48 89 5C 24 ?? 57 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 44 24 ?? 0F B7 5A")]
     public static partial void HandleInventoryItemUpdatePacket(uint targetId, InventoryItemPacket* packet);
 
-    [MemberFunction("E8 ?? ?? ?? ?? EB ?? 3D ?? ?? ?? ?? 75 ?? 48 8D 53 ?? 81 FE")]
+    // estell: 7.56(2026.09.01)で呼び出し元の後続命令が変わり(`81 FE` -> `41 8B CD`)、
+    // 従来の callsite シグネチャが一致しなくなった。callsite はディスパッチャの
+    // オペコード比較(`3D xx xx xx xx`)を含むためパッチのたびに壊れる。
+    // 関数先頭(0x140B4A110)を直接指す形に変更する。
+    // 同一関数である根拠: 旧 0x140B45A20 と先頭48バイト中40バイトが一致し、
+    // 差分は rel32 と構造体オフセット(+8 -> +4)のみ。
+    // なお `0F B7 5A 04` の 04 をワイルドカードにすると2箇所に一致するため固定している。
+    [MemberFunction("48 89 5C 24 08 57 48 83 EC 20 0F B7 5A 04 48 8B FA 8B CB")]
     public static partial void HandleInventoryItemPacket(uint targetId, InventoryItemPacket* packet);
 
     [MemberFunction("E8 ?? ?? ?? ?? EB 13 3D")]

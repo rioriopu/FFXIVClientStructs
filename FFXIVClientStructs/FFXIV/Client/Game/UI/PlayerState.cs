@@ -520,7 +520,10 @@ public unsafe partial struct PlayerState {
     /// <summary>
     /// Returns whether the player is any kind of Mentor (Battle or Trade Mentor).
     /// </summary>
-    [MemberFunction("E8 ?? ?? ?? ?? 84 C0 74 0D B0 02")]
+    // estell: 7.56(2026.09.01)で同型の呼び出し元が2箇所になった。
+    // 現状はたまたま先に当たる方(0x140BE3EA0)が正解だが、順序に依存していて危うい。
+    // 別関数側(0x140B6F360)との分岐点である `48 8B 5C 24 ?? 32 C0` まで含めて一意化する。
+    [MemberFunction("E8 ?? ?? ?? ?? 84 C0 74 0D B0 02 48 8B 5C 24 ?? 48 83 C4 ?? 5F C3 48 8B 5C 24 ?? 32 C0")]
     public partial bool IsMentor();
 
     /// <summary>

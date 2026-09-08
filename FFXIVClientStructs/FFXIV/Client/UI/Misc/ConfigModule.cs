@@ -54,7 +54,11 @@ public unsafe partial struct ConfigModule {
     [MemberFunction("E8 ?? ?? ?? ?? 33 DB 83 E7")]
     public partial int GetValueByIndex(int optionIndex, int valueSetIndex);
 
-    [MemberFunction("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 41 54 41 56 41 57 48 83 EC ?? 45 33 E4")]
+    // estell: 7.56(2026.09.01)で同じプロローグを持つ関数が2つになった。
+    // 先に当たるのは別関数(0x14052E4E0)で、正解は 0x1407C6840。
+    // 退避先オフセットと `sub rsp,40` を実値で固定して一意化する
+    // (ここをワイルドカードに戻すと再び別関数を掴む)。
+    [MemberFunction("48 89 5C 24 10 48 89 6C 24 18 48 89 74 24 20 41 54 41 56 41 57 48 83 EC 40 45 33 E4")]
     public partial void ResetOptionsByCategoryMask(uint categoryMask, int valueSetIndex);
 
     [MemberFunction("48 89 6C 24 ?? 48 89 74 24 ?? 41 56 48 83 EC ?? 45 32 F6")]

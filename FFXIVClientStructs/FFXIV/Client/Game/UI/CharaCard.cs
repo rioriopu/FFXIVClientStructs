@@ -27,7 +27,13 @@ public unsafe partial struct CharaCard {
     [MemberFunction("48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 84 24 ?? ?? ?? ?? 48 8B 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 8B 0D")]
     public partial void RequestCharaCardUpdate();
 
-    [MemberFunction("40 53 48 83 EC ?? 8B 05 ?? ?? ?? ?? 48 8B DA")]
+    // estell: 7.56(2026.09.01)でこの関数が書き換えられ、プロローグが
+    // `40 53 48 83 EC 20`(push rbx / sub rsp,20)から広いレジスタ退避に変わったため
+    // 従来のシグネチャが一致しなくなった。0x14097BB20 を指す新しい先頭パターンに差し替える。
+    // 同一関数である根拠: コピー先が this+0x118/+0x120/+0x128… と旧実装に完全一致する
+    // (コピー元だけがパケット構造変更で +0x28 -> +0x30 にずれている)。この並びは exe 内で一意。
+    // `48 8B 42 ??` はパケット構造の変更に追従できるようワイルドカード化している。
+    [MemberFunction("48 89 5C 24 18 48 89 54 24 10 55 56 57 41 54 41 55 41 56 41 57 48 83 EC 30 48 8B 42 ?? 48 8B D9")]
     public partial void HandleCurrentCharaCardDataPacket(CharaCardPacket* packet);
 }
 

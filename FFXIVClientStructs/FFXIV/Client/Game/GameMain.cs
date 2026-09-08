@@ -59,7 +59,10 @@ public unsafe partial struct GameMain {
     [MemberFunction("E8 ?? ?? ?? ?? 41 83 7E ?? 00 4C 8D 3D")]
     public static partial bool IsInGPose();
 
-    [MemberFunction("E8 ?? ?? ?? ?? 32 DB 0F B6 C3")]
+    // estell: 7.56(2026.09.01)で同型の呼び出し元が3箇所に増えた。
+    // 先に当たる2つはいずれも別関数(0x1409B3F80 / 0x14049E8B0)で、正解は 0x1406053E0。
+    // 後続の `E9`(tail jump)と復元コードまで含めて一意化する。
+    [MemberFunction("E8 ?? ?? ?? ?? 32 DB 0F B6 C3 E9 ?? ?? ?? ?? F3 44 0F 10 54 24")]
     public static partial bool IsInIdleCam();
 
     [MemberFunction("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 8B 44 24 70 48 8D 8D ?? ?? ?? ??")]

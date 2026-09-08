@@ -30,7 +30,11 @@ public unsafe partial struct AtkComponentBase : ICreatable<AtkComponentBase> {
     [MemberFunction("E8 ?? ?? ?? ?? 49 8B D7 48 89 87")]
     public partial AtkComponentBase* GetComponentById(uint id);
 
-    [MemberFunction("E8 ?? ?? ?? ?? 8B 94 9E")]
+    // estell: 7.56(2026.09.01)で同型の呼び出し元が増え、従来の8バイトでは2箇所に一致するようになった。
+    // しかも先に当たるのは別関数(0x14065EB90)側で、正解は 0x14068CE20。
+    // 後続の `48 8B C8 / E8 / 48 8B 8E` まで含めて一意化する。
+    // 構造体オフセット部分はパッチで動くためワイルドカード化している。
+    [MemberFunction("E8 ?? ?? ?? ?? 8B 94 9E ?? ?? ?? ?? 48 8B C8 E8 ?? ?? ?? ?? 48 8B 8E")]
     public partial AtkImageNode* GetImageNodeById(uint id);
 
     [MemberFunction("E8 ?? ?? ?? ?? 49 63 D7")]

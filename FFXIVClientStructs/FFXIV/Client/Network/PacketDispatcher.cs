@@ -33,7 +33,13 @@ public unsafe partial struct PacketDispatcher {
         GameObjectId targetId,
         bool isRecorded);
 
-    [MemberFunction("E8 ?? ?? ?? ?? B0 ?? 48 8B 5C 24 ?? 48 8B 74 24 ?? 48 83 C4 ?? 5F C3 8B 4F ?? 48 8B D3 E8 ?? ?? ?? ?? B0 ?? 48 8B 5C 24 ?? 48 8B 74 24 ?? 48 83 C4 ?? 5F C3 8B 4F ?? 41 B0 ?? 48 8B D3 E8 ?? ?? ?? ?? B0 ?? 48 8B 5C 24 ?? 48 8B 74 24 ?? 48 83 C4 ?? 5F C3 8B 4F ?? 41 B0 ?? 48 8B D3 E8 ?? ?? ?? ?? B0 ?? 48 8B 5C 24 ?? 48 8B 74 24 ?? 48 83 C4 ?? 5F C3 8B 4F ?? 41 B0 ?? 48 8B D3 E8 ?? ?? ?? ?? B0 ?? 48 8B 5C 24 ?? 48 8B 74 24 ?? 48 83 C4 ?? 5F C3 8B 4F")]
+    // 2026.10.06 で旧シグネチャが 2 箇所に一致するようになり、しかも両方とも別の
+    // ハンドラを指していた(0x140B33B60 / 0x140B39660 はどちらも引数の受け渡し方が違う)。
+    // sigcheck は一意性しか見ないため、この種の誤りは AMBIGUOUS としてしか現れない。
+    // この case は第 2 引数を 1 固定で渡す("B2 01" = mov dl,1)点が他と違うので、
+    // 直前の 1 ブロックと合わせてアンカーにし、末尾の call を追う。
+    // 2026.09.15 / 2026.10.06 の双方で一意、かつ各版の正しい関数へ解決することを確認済み。
+    [MemberFunction("B0 ?? 48 8B 5C 24 ?? 48 8B 74 24 ?? 48 83 C4 ?? 5F C3 B2 ?? 48 8B CB E8", 24)]
     public static partial void HandlePrepareZoningPacket(PrepareZoningPacket* packet, byte a2);
 
     [MemberFunction("4C 8B DC 55 56 41 56 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 84 24 ?? ?? ?? ?? 41 0F B6 F0")]
@@ -93,7 +99,19 @@ public unsafe partial struct PacketDispatcher {
     [MemberFunction("40 53 57 48 81 EC ?? ?? ?? ?? 48 8B FA 8B")]
     public static partial void HandleActorCastPacket(uint entityId, ActorCastPacket* packet);
 
-    [MemberFunction("E8 ?? ?? ?? ?? B0 ?? 48 8B 5C 24 ?? 48 8B 74 24 ?? 48 83 C4 ?? 5F C3 48 8B CB E8 ?? ?? ?? ?? B0 ?? 48 8B 5C 24 ?? 48 8B 74 24 ?? 48 83 C4 ?? 5F C3 48 8B CB E8 ?? ?? ?? ?? B0 ?? 48 8B 5C 24 ?? 48 8B 74 24 ?? 48 83 C4 ?? 5F C3 48 8B CB E8 ?? ?? ?? ?? B0 ?? 48 8B 5C 24 ?? 48 8B 74 24 ?? 48 83 C4 ?? 5F C3 8B 4F ?? 41 B0")]
+    // 2026.10.06 でパケット振り分けの case 順が変わり、旧シグネチャ(同一ブロック 4 連 +
+    // "8B 4F ?? 41 B0" で終端)が 0 hit になった。
+    // ブロックを数え上げる形は、順序が変わると「一意だが別のハンドラを指す」状態に
+    // なりうる(実際 1〜2 ブロック版は別関数へ解決した)。sigcheck は一意性しか見ないため
+    // これは検出できない。そこで case 固有の判定列をアンカーにし、
+    // relativeFollowOffsets で末尾の call を追う形にした。
+    //   8B 53 04        mov edx,[rbx+4]      パケット opcode
+    //   C1 E9 10        shr ecx,10
+    //   81 E9 03 80 ..  sub ecx,8003h        この case 固有の定数
+    //   89 96 58 06 ..  mov [rsi+658h],edx
+    // こうすると位置がずれた場合は 0 hit = BROKEN として可視化され、黙って誤った
+    // 関数を指すことがない。
+    [MemberFunction("8B 53 04 8B CA C1 E9 10 81 E9 03 80 00 00 74 ?? 83 E9 ?? 74 ?? 83 F9 ?? 0F 85 ?? ?? ?? ?? 89 96 ?? ?? ?? ?? B0 ?? 48 8B 5C 24 ?? 48 8B 74 24 ?? 48 83 C4 ?? 5F C3 48 8B CB E8", 58)]
     public static partial void HandleMapEffectPacket(MapEffectPacket* packet);
 
     [MemberFunction("4C 8D 89 ?? ?? ?? ?? 48 8B D1")]
